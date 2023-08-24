@@ -19,12 +19,12 @@ function utils.lgprint(text, x, y, r, sx, sy, ox, oy, kx, ky)
 	--! test for scaling.  Maybe better to make a new font with scale.
 	--!  Avoid blurring
 
-	x = math.floor(x)
-	y = math.floor(y)
+	x = math.floor(x or 0)
+	y = math.floor(y or 0)
 	love.graphics.print( text, x, y, r, sx, sy, ox, oy, kx, ky )
 
 end
-
+utils.print = utils.lgprint
 -- printf
 
 local jMap = {
