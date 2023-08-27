@@ -115,4 +115,10 @@ function utils.capitalize(text)
 	return text:gsub("^%l", string.upper)
 end
 
+function utils.replaceChar(str, pos, to)
+	-- the +1 is so -1 means last char
+	if pos < 0 then pos = str:len() + (pos + 1) end
+	return str:sub(1, pos - 1) .. to .. str:sub(pos + 1, str:len())
+end
+
 return utils
