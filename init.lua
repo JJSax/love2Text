@@ -89,7 +89,6 @@ function utils.listPrint(list, x, y, font, gap)
 
 	love.graphics.push("all")
 	if font then utils.setFont(font) end
-	local font = love.graphics.getFont()
 	gap = gap or 5
 	for i, v in ipairs(list) do
 		utils.lgprint(v, x, y * i + (i*gap))
