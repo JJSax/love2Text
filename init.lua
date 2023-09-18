@@ -7,10 +7,13 @@ local utils = {
 	_VERSION = "0.1.0"
 }
 local fonts = utils.fonts
+local currentFont = love.graphics.getFont()
 
 function utils.setFont(size)
+	if size == nil then return currentFont end
 	if not fonts[size] then fonts[size] = love.graphics.newFont(size) end
 	love.graphics.setFont(fonts[size])
+	currentFont = fonts[size]
 	return fonts[size]
 end
 
