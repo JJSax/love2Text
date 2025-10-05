@@ -42,7 +42,7 @@ local jMap = {
 	-- Let x, y define where the center of the text will be
 	middle = function(t, f) return f:getWidth(t)/2, f:getHeight()/2 end
 }
-function utils.jPrint(text, justify, x, y, font)
+function utils.jPrint(text, justify, x, y, font, scale)
 
 	assert(jMap[justify], ("%s is not a valid justify option."):format(justify))
 
@@ -51,7 +51,7 @@ function utils.jPrint(text, justify, x, y, font)
 	local font = utils.setFont(font)
 	local ox, oy = jMap[justify](text, font)
 
-	utils.lgprint(text, x, y, 0, 1, 1, ox, oy)
+	utils.lgprint(text, x, y, 0, scale or 1, scale or 1, ox, oy)
 
 	love.graphics.pop()
 
@@ -69,9 +69,9 @@ function utils.centerText(text, start, finish)
 	)
 end
 
-function utils.hcPrint(text, y, font)
+function utils.hcPrint(text, y, font, scale)
 	if font then utils.setFont(font) end
-	utils.lgprint(text, utils.centerText(text), y)
+	utils.lgprint(text, utils.centerText(text), y, 0, scale or 1, scale or 1)
 end
 
 -- function utils.vcPrint(text, x, font)
@@ -79,13 +79,13 @@ end
 -- 	utils.lgprint(text, x, )
 -- end
 
-function utils.mPrint(text, x, y, font)
+function utils.mPrint(text, x, y, font, scale)
 	-- middle print.  Center text on x/y coords
 
-	utils.jPrint(text, "middle", x, y, font)
+	utils.jPrint(text, "middle", x, y, font, scale or 1)
 end
 
-function utils.listPrint(list, x, y, font, gap)
+function utils.listPrint(list, x, y, font, gap, scale)
 
 	-- Takes a list of things to print and prints it at x, y
 	-- With a new line between them.
@@ -94,12 +94,12 @@ function utils.listPrint(list, x, y, font, gap)
 	if font then utils.setFont(font) end
 	gap = gap or 5
 	for i, v in ipairs(list) do
-		utils.lgprint(v, x, y * i + (i*gap))
+		utils.lgprint(v, x, y * i + (i*gap), 0, scale or 1, scale or 1)
 	end
 	love.graphics.pop()
 end
 
-function utils.individualListPrint(text, i, x, y, font, gap)
+function utils.individualListPrint(text, i, x, y, font, gap, scale)
 
 	-- prints like listPrint does, except with individual lines
 	-- doesn't need prior lines to work,
@@ -109,7 +109,7 @@ function utils.individualListPrint(text, i, x, y, font, gap)
 	if font then utils.setFont(font) end
 	local font = love.graphics.getFont()
 	gap = gap or 5
-	utils.lgprint(text, x, y + (i-1) * font:getHeight() + gap)
+	utils.lgprint(text, x, y + (i - 1) * font:getHeight() + gap, 0, scale or 1, scale or 1)
 	love.graphics.pop()
 end
 
