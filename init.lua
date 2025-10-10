@@ -4,10 +4,15 @@ assert(love.graphics, "love.graphics not found.  Please enable it in conf.lua.")
 
 local utils = {
 	fonts = {},
-	_VERSION = "0.1.0"
+	_VERSION = "0.2.0"
 }
 local fonts = utils.fonts
 local currentFont = love.graphics.getFont()
+
+function utils.createFont(size)
+	if not fonts[size] then fonts[size] = love.graphics.newFont(size) end
+	return fonts[size]
+end
 
 function utils.setFont(size)
 	if size == nil then return currentFont end
@@ -19,28 +24,67 @@ end
 
 function utils.lgprint(text, x, y, r, sx, sy, ox, oy, kx, ky)
 	-- floor coordinates to avoid text blurring
-	--! test for scaling.  Maybe better to make a new font with scale.
-	--!  Avoid blurring
-
 	x = math.floor(x or 0)
 	y = math.floor(y or 0)
 	love.graphics.print( text, x, y, r, sx, sy, ox, oy, kx, ky )
-
 end
 utils.print = utils.lgprint
--- printf
+
+---Extract the text from a colored text table
+---@param coloredText table
+---@return string
+function utils.extractFromColored(coloredText)
+	if type(coloredText) == "string" then return coloredText end
+
+	if type(coloredText) == "table" then
+		-- is colored text
+		local out = ""
+		for i = 2, #coloredText, 2 do -- get only the text portions
+			out = out .. coloredText[i]
+		end
+		return out
+	end
+	error("param text must a coloredtext table.")
+end
+
+---Get the width of text.  Works with coloredtext too.
+---@param text string|table
+---@return integer
+function utils.getWidth(font, text)
+	assert(type(font) == "number", "param font must be a number.")
+	local lFont = utils.setFont(font)
+	if type(text) == "table" then
+		-- is colored text
+		local w = 0
+		for i = 2, #text, 2 do -- get only the text portions
+			w = w + lFont:getWidth(text[i])
+		end
+		return w
+	elseif type(text) == "string" or type(text) == "number" then
+		return lFont:getWidth(text)
+	end
+	error("param text must be string or coloredtext table.")
+end
+
+function utils.getHeight(font, text)
+	local realFont = utils.createFont(font)
+	if type(text) == "table" then
+		return realFont:getHeight(text[2])
+	end
+	return realFont:getHeight(text)
+end
 
 local jMap = {
 	-- y is the top of the text
 	-- Let x define where the right of the text will be
-	right = function(t, f) return f:getWidth(t), 0 end,
+	right = function(t, f) return utils.getWidth(f, t), 0 end,
 	-- Let x define where the left of the text will be
 	left = function() return 0, 0 end,
 	-- Let x define where the center of the text will be
-	center = function(t, f) return f:getWidth(t)/2, 0 end,
+	center = function(t, f) return utils.getWidth(f, t)/2, 0 end,
 
 	-- Let x, y define where the center of the text will be
-	middle = function(t, f) return f:getWidth(t)/2, f:getHeight()/2 end
+	middle = function(t, f) return utils.getWidth(f, t)/2, utils.getHeight(f, t)/2 end
 }
 function utils.jPrint(text, justify, x, y, font, scale)
 
@@ -48,7 +92,7 @@ function utils.jPrint(text, justify, x, y, font, scale)
 
 	love.graphics.push("all")
 
-	local font = utils.setFont(font)
+	utils.setFont(font)
 	local ox, oy = jMap[justify](text, font)
 
 	utils.lgprint(text, x, y, 0, scale or 1, scale or 1, ox, oy)
@@ -65,7 +109,7 @@ function utils.centerText(text, start, finish)
 	if not start then start = 0 end
 	if not finish then finish = love.graphics.getWidth() end
 	return math.floor(
-		start + (finish - start) / 2 - love.graphics.getFont():getWidth(text) / 2
+		start + (finish - start) / 2 - love.graphics.getFont():getWidth(utils.extractFromColored(text)) / 2
 	)
 end
 
@@ -85,31 +129,35 @@ function utils.mPrint(text, x, y, font, scale)
 	utils.jPrint(text, "middle", x, y, font, scale or 1)
 end
 
-function utils.listPrint(list, x, y, font, gap, scale)
+--! had to remove the utils.setFont lines because I am now using jPrint for justify.
+--todo fix this so it can use either fonts or numbers
+function utils.listPrint(list, x, y, font, gap, scale, justify)
 
 	-- Takes a list of things to print and prints it at x, y
 	-- With a new line between them.
 
 	love.graphics.push("all")
-	if font then utils.setFont(font) end
+	-- if font then utils.setFont(font) end
 	gap = gap or 5
 	for i, v in ipairs(list) do
-		utils.lgprint(v, x, y * i + (i*gap), 0, scale or 1, scale or 1)
+		-- utils.lgprint(v, x, y * i + (i*gap), 0, scale or 1, scale or 1)
+		utils.jPrint(v, justify or "left", x, y, font, scale)
 	end
 	love.graphics.pop()
 end
 
-function utils.individualListPrint(text, i, x, y, font, gap, scale)
+function utils.individualListPrint(text, i, x, y, font, gap, scale, justify)
 
 	-- prints like listPrint does, except with individual lines
 	-- doesn't need prior lines to work,
 	--@ i represents which line is being passed
 
 	love.graphics.push("all")
-	if font then utils.setFont(font) end
-	local font = love.graphics.getFont()
+	-- if font then utils.setFont(font) end
+	-- local font = love.graphics.getFont()
 	gap = gap or 5
-	utils.lgprint(text, x, y + (i - 1) * font:getHeight() + gap, 0, scale or 1, scale or 1)
+	-- utils.lgprint(text, x, y + (i - 1) * font:getHeight() + gap, 0, scale or 1, scale or 1)
+	utils.jPrint(text, justify or "left", x, y + (i - 1) * font + gap, font, scale or 1)
 	love.graphics.pop()
 end
 
